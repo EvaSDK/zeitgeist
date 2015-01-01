@@ -41,7 +41,6 @@ ZEITGEIST_REQUIRED="glib-2.0 >= $GLIB_REQUIRED
 
 PKG_CHECK_MODULES(ZEITGEIST, [$ZEITGEIST_REQUIRED])
 
-
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
@@ -72,40 +71,42 @@ AC_CONFIG_FILES([
 #################################################
 DEE_ICU_REQUIRED=1.0.2
 
+have_dee_icu=no
 AC_ARG_WITH([dee-icu],
-	AS_HELP_STRING([--with-dee-icu[=@<:@no/auto/yes@:>@]],
-		[Build the FTS extension with dee-icu]),
-	[with_dee_icu=$withval],
-	[with_dee_icu="auto"])
+            AS_HELP_STRING([--with-dee-icu[=@<:@no/auto/yes@:>@]],
+                           [Build the FTS extension with dee-icu]),
+            [],
+            [with_dee_icu="auto"])
 
-if test "x$with_dee_icu" = "xauto" ; then
-	PKG_CHECK_EXISTS([dee-icu-1.0 >= $DEE_ICU_REQUIRED],
-		with_dee_icu="yes",
-		with_dee_icu="no")
-fi
+AS_IF([test "$with_dee_icu" = "yes"], [have_dee_icu=yes],
+      [test "$with_dee_icu" = "auto"], [
+        PKG_CHECK_EXISTS([dee-icu-1.0 >= $DEE_ICU_REQUIRED],
+                         [have_dee_icu=yes])
+      ])
 
-if test "x$with_dee_icu" = "xyes" ; then
-	PKG_CHECK_MODULES(DEE_ICU, dee-icu-1.0 >= $DEE_ICU_REQUIRED)
-	AC_DEFINE(HAVE_DEE_ICU, 1, [Have dee-icu])
-fi
+AS_IF([test "$have_dee_icu" = "yes"], [
+  PKG_CHECK_MODULES([DEE_ICU], [dee-icu-1.0 >= $DEE_ICU_REQUIRED])
+  AC_DEFINE([HAVE_DEE_ICU], [1], [Have dee-icu])
+])
 
-AM_CONDITIONAL(HAVE_DEE_ICU, test "x$with_dee_icu" = "xyes")
+AM_CONDITIONAL([HAVE_DEE_ICU], [test "$have_dee_icu" = "yes"])
 
 #################################################
 # DBus service
 #################################################
 
 AC_ARG_WITH([session_bus_services_dir],
-            AC_HELP_STRING([--with-session-bus-services-dir], [Path to DBus services directory]))
+            AS_HELP_STRING([--with-session-bus-services-dir],
+                           [Path to DBus services directory]))
 
-if test "x$with_session_bus_services_dir" = "x" ; then
-	PKG_CHECK_MODULES(DBUS_MODULE, "dbus-1")
-	services_dir="`$PKG_CONFIG --variable session_bus_services_dir dbus-1`"
-else
-	services_dir="$with_session_bus_services_dir"
-fi
+AS_IF([test -z "$with_session_bus_services_dir"],
+      [
+        PKG_CHECK_MODULES([DBUS_MODULE], [dbus-1])
+        DBUS_SERVICES_DIR=`$PKG_CONFIG --variable session_bus_services_dir dbus-1`
+      ], [
+        DBUS_SERVICES_DIR="$with_session_bus_services_dir"
+      ])
 
-DBUS_SERVICES_DIR="$services_dir"
 AC_SUBST(DBUS_SERVICES_DIR)
 
 #################################################
@@ -113,32 +114,35 @@ AC_SUBST(DBUS_SERVICES_DIR)
 #################################################
 
 AC_ARG_ENABLE([explain-queries],
-            AS_HELP_STRING([--enable-explain-queries], [Enable SQL debugging]),
-            [explain_queries=$enableval],[explain_queries="no"])
+              AS_HELP_STRING([--enable-explain-queries], [Enable SQL debugging]),
+              [],
+              [enable_explain_queries="no"])
 
-AM_CONDITIONAL(EXPLAIN_QUERIES, test "x$explain_queries" = "xyes")
+AM_CONDITIONAL([EXPLAIN_QUERIES], [test "$enable_explain_queries" = "yes"])
 
 #################################################
 # Configure option: --enable-fts
 #################################################
 
 AC_ARG_ENABLE([fts],
-            AS_HELP_STRING([--enable-fts], [Build with FTS++ extension]),
-            [enable_fts=$enableval],[enable_fts="no"])
+              AS_HELP_STRING([--enable-fts], [Build with FTS++ extension]),
+              [],
+              [enable_fts="no"])
 
-AM_CONDITIONAL(HAVE_FTS, test "x$enable_fts" = "xyes")
+AM_CONDITIONAL([HAVE_FTS], [test "$enable_fts" = "yes"])
 
-if test "x$enable_fts" = "xyes"; then
-    # check for Xapian
-    AC_CHECK_PROG(HAVE_XAPIAN, xapian-config, yes, no)
-    if test "x$HAVE_XAPIAN" = "xno"; then
-      AC_MSG_ERROR("You need the Xapian development files in order to compile Zeitgeist")
-    fi
-    XAPIAN_LIBS=`xapian-config --libs`
-    XAPIAN_CXXFLAGS=`xapian-config --cxxflags`
-    AC_SUBST(XAPIAN_LIBS)
-    AC_SUBST(XAPIAN_CXXFLAGS)
-fi
+AS_IF([test "$enable_fts" = "yes"],
+      [
+        # check for Xapian
+        AC_CHECK_PROG([HAVE_XAPIAN], [xapian-config], [yes], [no])
+        AS_IF([test "$HAVE_XAPIAN" = "no"],
+              [AC_MSG_ERROR("You need the Xapian development files in order to compile Zeitgeist")])
+
+        XAPIAN_LIBS=`xapian-config --libs`
+        XAPIAN_CXXFLAGS=`xapian-config --cxxflags`
+        AC_SUBST([XAPIAN_LIBS])
+        AC_SUBST([XAPIAN_CXXFLAGS])
+      ])
 
 #################################################
 # Configure option: --enable-datahub
@@ -154,10 +158,11 @@ ZEITGEIST_DATAHUB_REQUIRED="glib-2.0 >= $GLIB_REQUIRED
                             json-glib-1.0 >= $JSON_GLIB_REQUIRED"
 
 AC_ARG_ENABLE([datahub],
-            AS_HELP_STRING([--enable-datahub], [Whether to build zeitgeist-datahub]),
-            [enable_datahub=$enableval],[enable_datahub="yes"])
+              AS_HELP_STRING([--enable-datahub], [Whether to build zeitgeist-datahub]),
+              [],
+              [enable_datahub="yes"])
 
-AM_CONDITIONAL(ENABLE_DATAHUB, test "x$enable_datahub" = "xyes")
+AM_CONDITIONAL([ENABLE_DATAHUB], [test "$enable_datahub" = "yes"])
 
 #################################################
 # Additional provider for datahub
@@ -166,17 +171,19 @@ AM_CONDITIONAL(ENABLE_DATAHUB, test "x$enable_datahub" = "xyes")
 TELEPATHY_GLIB_REQUIRED=0.18.0
 
 AC_ARG_ENABLE([telepathy],
-    AS_HELP_STRING([--disable-telepathy], [Disables the Telepathy]),
-    [enable_telepathy=$enableval],[enable_telepathy="yes"])
+              AS_HELP_STRING([--disable-telepathy], [Disables the Telepathy]),
+              [],
+              [enable_telepathy="yes"])
 
-if test "x$enable_telepathy" = "xyes" -a "x$enable_datahub" = "xyes"; then
-    PKG_CHECK_MODULES(TELEPATHY_GLIB, [telepathy-glib >= $TELEPATHY_GLIB_REQUIRED])
-    ZEITGEIST_DATAHUB_REQUIRED="$ZEITGEIST_DATAHUB_REQUIRED telepathy-glib >= $TELEPATHY_GLIB_REQUIRED"
-    AC_DEFINE([ENABLE_TELEPATHY], [1], [Is the Telepathy enabled?])
-else
-    enable_telepathy="no"
-fi
-AM_CONDITIONAL(ENABLE_TELEPATHY, test "x$enable_telepathy" = "xyes" -a "x$enable_datahub" = "xyes")
+AS_IF([test "$enable_telepathy" = "yes" -a "$enable_datahub" = "yes"], [
+        PKG_CHECK_MODULES([TELEPATHY_GLIB], [telepathy-glib >= $TELEPATHY_GLIB_REQUIRED])
+        ZEITGEIST_DATAHUB_REQUIRED="$ZEITGEIST_DATAHUB_REQUIRED telepathy-glib >= $TELEPATHY_GLIB_REQUIRED"
+        AC_DEFINE([ENABLE_TELEPATHY], [1], [Is the Telepathy enabled?])
+      ], [
+        enable_telepathy="no"
+      ])
+
+AM_CONDITIONAL([ENABLE_TELEPATHY], [test "$enable_telepathy" = "yes" -a "$enable_datahub" = "yes"])
 
 #################################################
 # Additional provider for datahub
@@ -184,23 +191,26 @@ AM_CONDITIONAL(ENABLE_TELEPATHY, test "x$enable_telepathy" = "xyes" -a "x$enable
 #################################################
 
 AC_ARG_ENABLE([downloads-monitor],
-    AS_HELP_STRING([--disable-downloads-monitor], [Disables the XDG_DOWNLOAD_DIRECTORY file monitor]),
-    [enable_downloads_monitor=$enableval],[enable_downloads_monitor="yes"])
+              AS_HELP_STRING([--disable-downloads-monitor], [Disables the XDG_DOWNLOAD_DIRECTORY file monitor]),
+              [],
+              [enable_downloads_monitor="yes"])
 
-if test "x$enable_downloads_monitor" = "xyes" -a "x$enable_datahub" = "xyes"; then
-    AC_DEFINE([DOWNLOADS_MONITOR_ENABLED], [1], [Is the XDG_DOWNLOAD_DIRECTORY file monitor enabled?])
-else
-    AC_DEFINE([DOWNLOADS_MONITOR_ENABLED], [0], [Is the XDG_DOWNLOAD_DIRECTORY file monitor enabled?])
-fi
-AM_CONDITIONAL(DOWNLOADS_MONITOR_ENABLED, test "x$enable_downloads_monitor" = "xyes" -a "x$enable_datahub" = "xyes")
+AS_IF([test "$enable_downloads_monitor" = "yes" -a "$enable_datahub" = "yes"], [
+        AC_DEFINE([DOWNLOADS_MONITOR_ENABLED], [1], [Is the XDG_DOWNLOAD_DIRECTORY file monitor enabled?])
+      ], [
+        AC_DEFINE([DOWNLOADS_MONITOR_ENABLED], [0], [Is the XDG_DOWNLOAD_DIRECTORY file monitor enabled?])
+      ])
 
+AM_CONDITIONAL([DOWNLOADS_MONITOR_ENABLED], [test "$enable_downloads_monitor" = "yes" -a "$enable_datahub" = "yes"])
 
 #################################################
 # Configure option: --enable-datahub
 #################################################
-if test "x$enable_datahub" = "xyes"; then
-    PKG_CHECK_MODULES(ZEITGEIST_DATAHUB, [$ZEITGEIST_DATAHUB_REQUIRED])
-fi
+
+AS_IF([test "$enable_datahub" = "yes"],
+      [
+        PKG_CHECK_MODULES(ZEITGEIST_DATAHUB, [$ZEITGEIST_DATAHUB_REQUIRED])
+      ])
 
 #################################################
 # Libzeitgeist 2.0
@@ -224,28 +234,30 @@ AC_SUBST(LIBZEITGEIST_LT_VERSION)
 #################################################
 
 AC_ARG_ENABLE([docs],
-    AS_HELP_STRING([--enable-docs], [Enable documentation generation]),
-    [enable_docs=$enableval], [enable_docs="no"])
+              AS_HELP_STRING([--enable-docs], [Enable documentation generation]),
+              [],
+              [enable_docs="no"])
 
 found_valadoc=no
 AS_IF([test "x$enable_docs" != "xno"], [
-    AC_PATH_PROG(VALADOC, valadoc, :)
-    AS_IF([test -x "$VALADOC"], [
-        found_valadoc=yes
-        AC_SUBST(VALADOC)
-    ], [
-        AS_IF([test "x$enable_docs" == "xyes"], AC_MSG_ERROR([Unable to find valadoc]))
-    ])
-    AC_PATH_PROG(GTKDOC_SCAN, gtkdoc-scan, :)
-    AS_IF([test -x "$GTKDOC_SCAN"], [
-        found_gtkdoc_scan=yes
-        AC_SUBST(GTKDOC_SCAN)
-    ], [
-        AS_IF([test "x$enable_docs" == "xyes"], AC_MSG_ERROR([Unable to find gtkdoc-scan]))
-    ])
+  AC_PATH_PROG([VALADOC], [valadoc], [:])
+  AS_IF([test -x "$VALADOC"], [
+    found_valadoc=yes
+    AC_SUBST([VALADOC])
+  ], [
+    AS_IF([test "x$enable_docs" == "xyes"], [AC_MSG_ERROR([Unable to find valadoc])])
+  ])
+
+  AC_PATH_PROG([GTKDOC_SCAN], [gtkdoc-scan], [:])
+  AS_IF([test -x "$GTKDOC_SCAN"], [
+    found_gtkdoc_scan=yes
+    AC_SUBST([GTKDOC_SCAN])
+  ], [
+    AS_IF([test "x$enable_docs" == "xyes"], [AC_MSG_ERROR([Unable to find gtkdoc-scan])])
+  ])
 ])
 
-AM_CONDITIONAL(ENABLE_DOCS, test "x$found_valadoc" = "xyes" -a "x$found_gtkdoc_scan" = "xyes")
+AM_CONDITIONAL([ENABLE_DOCS], [test "x$found_valadoc" = "xyes" -a "x$found_gtkdoc_scan" = "xyes"])
 
 GOBJECT_INTROSPECTION_CHECK([1.30])
 
@@ -254,10 +266,11 @@ GOBJECT_INTROSPECTION_CHECK([1.30])
 #################################################
 
 # check for rapper
-AC_CHECK_PROG(HAVE_RAPPER, rapper, yes, no)
-if test "x$HAVE_RAPPER" = "xno"; then
-  AC_MSG_ERROR("You need the tool `rapper' from the `raptor-utils' package in order to compile Zeitgeist")
-fi
+AC_CHECK_PROG([HAVE_RAPPER], [rapper], [yes], [no])
+
+AS_IF([test "$HAVE_RAPPER" = "no"], [
+  AC_MSG_ERROR([You need the tool `rapper' from the `raptor-utils' package in order to compile Zeitgeist])
+])
 
 # check for python-rdflib
 AM_PATH_PYTHON([2.7])
@@ -284,12 +297,12 @@ ${PACKAGE}-${VERSION}
 
   Optional dependencies
     fts++:                 ${enable_fts}
-    dee-icu:               ${with_dee_icu}
+    dee-icu:               ${have_dee_icu}
 
   Other build options:
     DataHub:               ${enable_datahub}
       Telepathy provider:  ${enable_telepathy}
-    SQL debugging:         ${explain_queries}
+    SQL debugging:         ${enable_explain_queries}
     libzeitgeist docs:     ${enable_docs}
     GObject Introspection: ${enable_introspection}
 
