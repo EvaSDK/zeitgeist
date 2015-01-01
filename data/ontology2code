@@ -24,6 +24,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import os
 import re
 import sys
@@ -125,12 +127,12 @@ class Symbol:
 		return self._all_children
 
 	def debug_print(self):
-		print "Name: %s" % self.name
-		print "  URI: %s" % self.uri
-		print "  Display Name: %s" % self.display_name
-		print "  Parents: %s" % ', '.join([str(p) for p in self.parents])
+		print("Name: %s" % self.name)
+		print("  URI: %s" % self.uri)
+		print("  Display Name: %s" % self.display_name)
+		print("  Parents: %s" % ', '.join([str(p) for p in self.parents]))
 		doc = self.doc if len(self.doc) <= 50 else "%s..." % self.doc[:47]
-		print "  Description: %s" % doc
+		print("  Description: %s" % doc)
 
 	def __str__(self):
 		return self.name
@@ -265,10 +267,10 @@ class PythonSerializer(GenericSerializer):
 			Utils.replace_items(parents, {
 				str(NIENS['InformationElement']): 'Interpretation',
 				str(NIENS['DataObject']): 'Manifestation' })
-			print "Symbol('%s', parent=%r, uri='%s', display_name='%s', " \
+			print("Symbol('%s', parent=%r, uri='%s', display_name='%s', "
 				"doc='%s', auto_resolve=False)" % (symbol.name, parents,
 				symbol.uri, Utils.escape_chars(symbol.display_name, '\''),
-				Utils.escape_chars(symbol.doc, '\''))
+				Utils.escape_chars(symbol.doc, '\'')))
 
 class ValaSerializer(GenericSerializer):
 
@@ -371,7 +373,7 @@ class OntologyCodeGenerator:
 			self._vala_serializer.dump_symbols, 'vala')
 
 	def _write_file(self, tplfilename, outfilename, content_generator, _type):
-		print >>sys.stderr, "Generating %s..." % outfilename
+		print("Generating %s..." % outfilename, file=sys.stderr)
 
 		# Read template file
 		tplfilename = os.path.join(self._basepath, tplfilename)
