@@ -32,7 +32,7 @@ import sys
 import glob
 import codecs
 import subprocess
-import StringIO
+import io
 import collections
 
 import rdflib
@@ -380,12 +380,12 @@ class OntologyCodeGenerator:
 		template = open(tplfilename).read()
 
 		# Generate output
-		content = StringIO.StringIO()
+		content = io.StringIO()
 		content_generator(content)
 		content = content.getvalue().strip('\n')
 
 		# Write header
-		output = StringIO.StringIO()
+		output = io.StringIO()
 		self._write_header(output, _type)
 
 		# Write template, insert the generated output into the correct
