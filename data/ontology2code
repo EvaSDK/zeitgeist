@@ -31,7 +31,7 @@ import re
 import sys
 import glob
 import codecs
-import commands
+import subprocess
 import StringIO
 import collections
 
@@ -202,9 +202,9 @@ class OntologyParser:
 		if not os.path.isdir(directory):
 			raise SystemExit, 'Directory doesn\'t exist: %s' % directory
 		files = ' '.join(glob.glob(os.path.join(directory, '*.trig')))
-		return commands.getoutput(
+		return subprocess.check_output(
 			"cat %s | rapper -i trig -o rdfxml -I ZeitgeistNamespace - " \
-			"2>/dev/null" % files)
+			"2>/dev/null" % files, shell=True)
 
 	def _parse(self, rdfxml_stream):
 		"""
