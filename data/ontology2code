@@ -67,16 +67,16 @@ class SymbolCollection(dict):
 
 	def post_process(self):
 		self.closed = True
-		for symbol in self.itervalues():
+		for symbol in self.values():
 			for (i, parent) in enumerate(symbol.parents):
 				symbol.parents[i] = self[parent]
 			self._by_namespace[symbol.namespace].append(symbol)
 
 	def iter_by_namespace(self):
-		return self._by_namespace.iteritems()
+		return self._by_namespace.items()
 
 	def debug_print(self):
-		for symbol in self.registered_symbols.itervalues():
+		for symbol in self.registered_symbols.values():
 			symbol.debug_print()
 			print
 
@@ -109,7 +109,7 @@ class Symbol:
 		""" Return all direct children of this Symbol. """
 		if self._children is None:
 			childs = set()
-			for symbol in self._collection.itervalues():
+			for symbol in self._collection.values():
 				if self in symbol.parents:
 					childs.add(symbol)
 			self._children = childs
@@ -175,7 +175,7 @@ class Utils:
 	def replace_items(item_set, item_map):
 		if not item_set:
 			return
-		for item, value in item_map.iteritems():
+		for item, value in item_map.items():
 			try:
 				item_set.remove(item)
 			except KeyError:
@@ -262,7 +262,7 @@ class GenericSerializer:
 class PythonSerializer(GenericSerializer):
 
 	def dump(self):
-		for symbol in sorted(self.symbols.itervalues()):
+		for symbol in sorted(self.symbols.values()):
 			parents = set((symbol.uri for symbol in symbol.parents))
 			Utils.replace_items(parents, {
 				str(NIENS['InformationElement']): 'Interpretation',
