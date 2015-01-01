@@ -209,7 +209,7 @@ class OntologyParser:
 	@staticmethod
 	def _load_rdfxml_from_trig_directory(directory):
 		if not os.path.isdir(directory):
-			raise SystemExit, 'Directory doesn\'t exist: %s' % directory
+			raise SystemExit('Directory doesn\'t exist: %s' % directory)
 		files = ' '.join(glob.glob(os.path.join(directory, '*.trig')))
 		return subprocess.check_output(
 			"cat %s | rapper -i trig -o rdfxml -I ZeitgeistNamespace - " \
@@ -424,8 +424,8 @@ class OntologyCodeGenerator:
 
 if __name__ == "__main__":
 	if len(sys.argv) != 2 or sys.argv[1] not in ('--vala', '--dump-python'):
-		raise SystemExit, 'Usage: %s [--vala|--dump-python]' % \
-			sys.argv[0]
+		raise SystemExit('Usage: %s [--vala|--dump-python]' % \
+			sys.argv[0])
 	generator = OntologyCodeGenerator()
 	if sys.argv[1] == '--vala':
 		generator.generate_vala()
