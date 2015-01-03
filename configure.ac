@@ -247,16 +247,7 @@ AS_IF([test "x$enable_docs" != "xno"], [
 
 AM_CONDITIONAL(ENABLE_DOCS, test "x$found_valadoc" = "xyes" -a "x$found_gtkdoc_scan" = "xyes")
 
-
-AC_ARG_ENABLE([introspection],
-            AS_HELP_STRING([--disable-introspection], [Enable Introspection]),
-            [enable_introspection=$enableval],[enable_introspection="yes"])
-AM_CONDITIONAL([HAVE_INTROSPECTION], [test "x$enable_introspection" != "xno"])
-
-if test "x$enable_introspection" != "xno"; then
-    # this will set HAVE_INTROSPECTION
-    GOBJECT_INTROSPECTION_REQUIRE([1.30])
-fi
+GOBJECT_INTROSPECTION_CHECK([1.30])
 
 #################################################
 # Ontology parsing dependencies
