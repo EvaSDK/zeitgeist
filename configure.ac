@@ -269,13 +269,14 @@ if test "x$HAVE_RAPPER" = "xno"; then
 fi
 
 # check for python-rdflib
+AM_PATH_PYTHON([2.7])
+
 AC_MSG_CHECKING([for python-rdflib])
-echo "import rdflib" | python - 2>/dev/null
-if test $? -ne 0 ; then
-  AC_MSG_FAILURE([failed.  Please install the python-rdflib package.])
-else
+AS_IF([$PYTHON -c "import rdflib" 2>/dev/null], [
   AC_MSG_RESULT([yes])
-fi
+], [
+  AC_MSG_FAILURE([failed.  Please install the python-rdflib package.])
+])
 
 #################################################
 # Summary
